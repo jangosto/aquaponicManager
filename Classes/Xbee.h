@@ -8,10 +8,10 @@ class Xbee
         int send (string);
         string read ();
 
+        string getDataRX();
+
     private:
         static const PATH = "/dev/ttyAMA0";
-        static const UART_RX_SEMAPHORE = 0;
-        static const UART_TX_MUTEXi = 1;
         static sem_t semaphore;
         static pthread_mutex_t mutex;
         int uart = -1;

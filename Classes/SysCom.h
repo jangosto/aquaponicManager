@@ -7,13 +7,21 @@ class SysCom
         SysCom ();
         SysCom (string);
 
-        bool getTemperatures ();
+        string getAddress();
+        bool getEnvironmentalTemperature ();
+        bool getWaterTemperature ();
+        bool getDataReady ();
 
     private:
-
+        static Xbee connection;
         string command;
         string address;
         float value;
+        bool dataReady;
+
+        bool init();
+        bool sendMessage();
+        bool processResponse(string);
 };
 
 #endif

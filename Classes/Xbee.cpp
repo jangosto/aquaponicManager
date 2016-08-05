@@ -73,6 +73,8 @@ int Xbee::send(string data)
     int i;
     int numSendedChars;
 
+    pthread_mutex_lock(&mutex);
+
     fprintf(stdout,"\n[INFO][Xbee::send] Sending data -%s-...\n",data);
 
     p_tx_buffer = &tx_buffer[0];
@@ -84,15 +86,19 @@ int Xbee::send(string data)
     }
     
     if (uart != -1) {
-        response=1;
+        response = 1;
         numSendedChars = write(uart, &tx_buffer[0], (p_tx_buffer - &tx_buffer[0]));
 
         if (numSendedChars < 0) {
             printf("\n[ERROR][Xbee::send] UART TX error\n");
             response = 0;
         }
+    } else {
+        printf("\n[ERROR][Xbee::send] UART TX error because uart is not available\n");
     }
     printf("\n[INFO][Xbee::send] Data sended.\n");
+
+    pthread_mutex_unlock(&mutex);
 
     return (response);
 }
@@ -119,4 +125,9 @@ int Xbee::openUart ()
     usleep(10000);
 
     return(descriptor_uart0);
+}
+
+string Xbee::getDataRX()
+{
+    return dataRX;
 }
