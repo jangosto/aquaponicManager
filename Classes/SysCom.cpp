@@ -1,92 +1,76 @@
 #include "SysCom.h"
-#include "Tools.h"
-#include "Xbee.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <stdbool.h>
-#include <vector>
+SerialPort SysCom::port;
 
 SysCom::SysCom()
 {
-    if (connection.uart == -1) {
-        init();
-    }
 }
 
-SysCom::SysCom(string addr)
+SysCom::SysCom(std::string addr)
 {
-    if (connection.uart == -1) {
-        init();
-    }
     address = addr;
 }
 
-SysCom::init()
+bool SysCom::init()
 {
-    connection.openUart();
-    connection.initMutex();
-    connection.initSemaphore();
 }
 
-string SysCom::getEnvironmentalTemperature()
+bool SysCom::getEnvironmentalTemperature()
 {
     command = "AMBTEMP";
-    sendCommand();
-    response = connection.getDataRX();
-    processResponse(response);
+    sendMessage();
+    processResponse(port.getDataRX());
 }
 
-string SysCom::getWaterTemperature()
+bool SysCom::getWaterTemperature()
 {
     command = "WATTEMP";
     sendMessage();
-    response = connection.getDataRX();
-    processResponse(response);
+    processResponse(port.getDataRX());
 }
 
-bool SysCom::sendMessage()
+bool SysCom::sendMessage ()
 {
     bool response = true;
-    int xbeeResponse = 0;
+    int serialPortResponse = 0;
 
-    string message = "";
+    std::string message;
 
-    if (address.length > 0) {
-        message = message + "_" + address;
+    if (address.length() > 0) {
+        message = address;
     } else {
         printf("\n[ERROR][SysCom::sendMessage] Address to send not defined");
         response = false;
     }
 
-    if (command.length > 0) {
-        message = message + command;
+    if (command.length() > 0) {
+        message = message + "_" + command;
     } else {
         printf("\n[ERROR][SysCom::sendMessage] Command to send not defined");
         response = false;
     }
 
-    if (value != null) {
-         message = message + "_" + (string) value;
-         value = null;
+    if (! isnan(value)) {
+         message = message + "_" + std::to_string(value);
+         value = std::numeric_limits<float>::quiet_NaN();
     }
 
-    xbeeResponse = connection.send(message);
-    if (xbeeResponse == 0 || xbeeResponse == 2) {
+    serialPortResponse = port.send(message);
+    if (serialPortResponse == 0 || serialPortResponse == 2) {
         response = false;
     }
 
     return response;
 }
 
-bool SysCom::processResponse(message)
+bool SysCom::processResponse (std::string message)
 {
-    vector<string> dataArray;
+    std::vector<std::string> dataArray;
 
-    dataArray = explode("_", message);
+    dataArray = Tools::StrTools::split(message, '_');
 
     if (dataArray.size() >= 3) {
-        value = atof(dataArray[2]);
+        value = atof(dataArray[2].c_str());
     }
 
     dataReady = true;
@@ -94,7 +78,12 @@ bool SysCom::processResponse(message)
     return true;
 }
 
-string getAddress()
+std::string SysCom::getAddress()
 {
     return address;
+}
+
+SerialPort SysCom::getPort ()
+{
+    return port;
 }
