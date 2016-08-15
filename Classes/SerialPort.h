@@ -9,7 +9,6 @@
 #include <termios.h>    //Used for UART
 
 #include <mutex>
-#include <semaphore.h>
 
 #define SERIAL_PATH "/dev/ttyAMA0"
 
