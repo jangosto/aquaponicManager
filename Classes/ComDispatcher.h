@@ -7,9 +7,10 @@
 #include <list>
 #include <mutex>
 #include <unistd.h>
+#include <thread>
 
 #define MAX_TTL 10
-#define TTL_TIME 100
+#define TTL_TIME 500000
 
 struct Conversation {
     unsigned int id;
@@ -28,10 +29,12 @@ class ComDispatcher
 {
     public:
         ComDispatcher ();
+        ~ComDispatcher ();
 
         unsigned int sendMessage (std::string, std::string, std::mutex*);
         bool removeMessage (unsigned int);
         std::string getResponse (unsigned int);
+        bool activate ();
 
     private:
         static SerialPort port;
@@ -43,7 +46,14 @@ class ComDispatcher
         unsigned int getNewId();
         Conversation* getMessage (unsigned int);
 
-        // Methodes which will be threads.
+        // Threads.
+        std::thread* sendThread;
+        std::thread* receiveThread;
+        std::thread* expireThread;
+        bool stop_sendThread = false;
+        bool stop_receiveThread = false;
+        bool stop_expireThread = false;
+
         void dispatchSendings ();
         void dispatchReceipts ();
         void expireConversations ();

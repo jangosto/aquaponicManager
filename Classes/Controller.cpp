@@ -1,5 +1,7 @@
 #include "Controller.h"
 
+ComDispatcher Controller::dispatcher;
+
 Controller::Controller()
 {
 }
@@ -7,6 +9,7 @@ Controller::Controller()
 Controller::Controller(std::string addr)
 {
     address = addr;
+    dispatcher.activate();
 }
 
 std::string Controller::getDesiredData()
@@ -16,7 +19,6 @@ std::string Controller::getDesiredData()
     std::mutex signal;
     std::string response;
     std::string result = "";
-    ComDispatcher dispatcher;
 
     signal.lock();
     message = createMessage();
@@ -24,7 +26,8 @@ std::string Controller::getDesiredData()
     signal.lock();
 
     response = dispatcher.getResponse(messageId);
-
+    dispatcher.removeMessage (messageId);
+    printf("\n\n[INFO][Controller::getDesiredData] Response taken from controller: %s\n\n", response.c_str());
     if (processResponse(response)) {
         result = value;
     }
@@ -67,7 +70,7 @@ std::string Controller::createMessage()
          value = "";
     }
 
-    return message;
+    return message + "\r";
 }
 
 bool Controller::processResponse(std::string message)

@@ -27,6 +27,7 @@ class Controller
         std::string command;
         std::string address;
         std::string value = "";
+        static ComDispatcher dispatcher;
 
         std::string createMessage ();
         bool processResponse (std::string);

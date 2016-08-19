@@ -2,39 +2,58 @@
 
 SerialPort ComDispatcher::port;
 
-Conversation::Conversation()
+Conversation::Conversation ()
 {
 }
 
-Conversation::Conversation(const Conversation&)
+Conversation::Conversation (const Conversation&)
 {
 }
 
-ComDispatcher::ComDispatcher()
+ComDispatcher::ComDispatcher ()
 {
 }
 
-unsigned int ComDispatcher::sendMessage(std::string message, std::string responseFormat, std::mutex* signal)
+ComDispatcher::~ComDispatcher ()
+{
+    stop_sendThread = true;
+    stop_receiveThread = true;
+    stop_expireThread = true;
+
+    if(sendThread->joinable()) sendThread->join();
+    if(receiveThread->joinable()) receiveThread->join();
+    if(expireThread->joinable()) expireThread->join();
+}
+
+bool ComDispatcher::activate ()
+{
+    sendThread = new std::thread (&ComDispatcher::dispatchSendings, this);
+    receiveThread = new std::thread (&ComDispatcher::dispatchReceipts, this);
+    expireThread = new std::thread (&ComDispatcher::expireConversations, this);
+}
+
+unsigned int ComDispatcher::sendMessage (std::string message, std::string responseFormat, std::mutex* signal)
 {
     Conversation element;
 
-    element.ttl = 0;
-    element.signal = signal;
-    element.request = message;
-    element.responseFormat = responseFormat;
-    element.id = getNewId();
     conversations.push_back(element);
+    conversations.back().ttl = 0;
+    conversations.back().signal = signal;
+    conversations.back().request = message;
+    conversations.back().responseFormat = responseFormat;
+    conversations.back().id = getNewId();
 
-    return element.id;
+    return conversations.back().id;
 }
 
-void ComDispatcher::dispatchSendings()
+void ComDispatcher::dispatchSendings ()
 {
     std::list<Conversation>::iterator current;
 
-    while (1) {
+    while (!stop_sendThread) {
         for (current = conversations.begin(); current != conversations.end(); ++current) {
             if (current->ttl == 0 && (current->response).length() == 0) {
+                printf("\n\n[INFO][ComDispatcher::dispatchSendings] List length: %d\n\n", conversations.size());
                 send(current->request);
                 current->ttl = MAX_TTL;
             }
@@ -55,16 +74,16 @@ bool ComDispatcher::send (std::string message)
     return response;
 }
 
-void ComDispatcher::dispatchReceipts()
+void ComDispatcher::dispatchReceipts ()
 {
-    while (1) {
+    while (!stop_receiveThread) {
         if (port.read() > 0) {
             saveResponse(port.getDataRX());
         }
     }
 }
 
-bool ComDispatcher::saveResponse(std::string response)
+bool ComDispatcher::saveResponse (std::string response)
 {
     std::list<Conversation>::iterator current;
 
@@ -81,14 +100,14 @@ bool ComDispatcher::saveResponse(std::string response)
     return false;
 }
 
-unsigned int ComDispatcher::getNewId()
+unsigned int ComDispatcher::getNewId ()
 {
     conversationId++;
 
     return conversationId;
 }
 
-bool ComDispatcher::removeMessage(unsigned int id)
+bool ComDispatcher::removeMessage (unsigned int id)
 {
     std::list<Conversation>::iterator current;
 
@@ -102,7 +121,7 @@ bool ComDispatcher::removeMessage(unsigned int id)
     return false;
 }
 
-std::string ComDispatcher::getResponse(unsigned int id)
+std::string ComDispatcher::getResponse (unsigned int id)
 {
     Conversation* message;
 
@@ -111,7 +130,7 @@ std::string ComDispatcher::getResponse(unsigned int id)
     return message->response;
 }
 
-Conversation* ComDispatcher::getMessage(unsigned int id)
+Conversation* ComDispatcher::getMessage (unsigned int id)
 {
     std::list<Conversation>::iterator current;
 
@@ -124,11 +143,11 @@ Conversation* ComDispatcher::getMessage(unsigned int id)
     return NULL;
 }
 
-void ComDispatcher::expireConversations()
+void ComDispatcher::expireConversations ()
 {
     std::list<Conversation>::iterator current;
 
-    while (1) {
+    while (!stop_expireThread) {
         for (current = conversations.begin(); current != conversations.end(); ++current) {
             if (current->ttl > 0 && (current->response).length() == 0) {
                 (current->ttl)--;
