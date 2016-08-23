@@ -51,13 +51,14 @@ void ComDispatcher::dispatchSendings ()
     std::list<Conversation>::iterator current;
 
     while (!stop_sendThread) {
+        listMx.lock();
         for (current = conversations.begin(); current != conversations.end(); ++current) {
             if (current->ttl == 0 && (current->response).length() == 0) {
-                printf("\n[INFO][ComDispatcher::dispatchSendings] List length: %d", conversations.size());
                 send(current->request);
                 current->ttl = MAX_TTL;
             }
         }
+        listMx.unlock();
     }
 }
 
@@ -87,22 +88,21 @@ void ComDispatcher::dispatchReceipts ()
 bool ComDispatcher::saveResponse (std::string response)
 {
     std::list<Conversation>::iterator current;
+    bool result = false;
 
-    printf("\n[INFO][ComDispatcher::saveReponse] Looking for corresponding message for: %s", response.c_str());
-
+    listMx.lock();
     for (current = conversations.begin(); current != conversations.end(); ++current) {
-        printf("\n[INFO][ComDispatcher::saveReponse] Cheching if it is response for %s request", current->request.c_str());
         if (response.find(current->responseFormat) != std::string::npos) {
-            current->manipulate.lock();
+            printf("\n[INFO][ComDispatcher::saveReponse] Received message is a valid response for %s request.", current->request.c_str());
             current->response = response;
-            printf("\n[INFO][ComDispatcher::saveReponse] Sending message received signal to requester.");
             (current->signal)->unlock();
-            current->manipulate.unlock();
-            return true;
+            result = true;
+            break;
         }
     }
+    listMx.unlock();
 
-    return false;
+    return result;
 }
 
 unsigned int ComDispatcher::getNewId ()
@@ -115,29 +115,37 @@ unsigned int ComDispatcher::getNewId ()
 bool ComDispatcher::removeMessage (unsigned int id)
 {
     std::list<Conversation>::iterator current;
+    bool result = false;
 
+    listMx.lock();
     for (current = conversations.begin(); current != conversations.end(); ++current) {
         if (current->id == id) {
             conversations.erase(current);
-            return true;
+            result = true;
+            break;
         }
     }
+    listMx.unlock();
 
-    return false;
+    return result;
 }
 
 bool ComDispatcher::removeResponseFromMessage (unsigned int id)
 {
     std::list<Conversation>::iterator current;
+    bool result = false;
 
+    listMx.lock();
     for (current = conversations.begin(); current != conversations.end(); ++current) {
         if (current->id == id) {
             current->response = "";
-            return true;
+            result = true;
+            break;
         }
     }
+    listMx.unlock();
 
-    return false;
+    return result;
 }
 
 std::string ComDispatcher::getResponse (unsigned int id)
@@ -152,14 +160,18 @@ std::string ComDispatcher::getResponse (unsigned int id)
 Conversation* ComDispatcher::getMessage (unsigned int id)
 {
     std::list<Conversation>::iterator current;
+    Conversation* result = NULL;
 
+    listMx.lock();
     for (current = conversations.begin(); current != conversations.end(); ++current) {
         if (current->id == id) {
-            return &(*current);
+            result = &(*current);
+            break;
         }
     }
+    listMx.unlock();
 
-    return NULL;
+    return result;
 }
 
 void ComDispatcher::expireConversations ()
@@ -167,11 +179,13 @@ void ComDispatcher::expireConversations ()
     std::list<Conversation>::iterator current;
 
     while (!stop_expireThread) {
+        listMx.lock();
         for (current = conversations.begin(); current != conversations.end(); ++current) {
             if (current->ttl > 0 && (current->response).length() == 0) {
                 (current->ttl)--;
             }
         }
+        listMx.unlock();
         usleep(TTL_TIME);
     }
 }

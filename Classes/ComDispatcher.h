@@ -19,7 +19,7 @@ struct Conversation {
     std::string request;
     std::string response = "";
     std::string responseFormat;
-    std::mutex manipulate;
+//    std::mutex manipulate;
 
     Conversation ();
     Conversation (const Conversation&);
@@ -41,6 +41,7 @@ class ComDispatcher
         static SerialPort port;
         std::list<Conversation> conversations;
         unsigned int conversationId = 0;
+        std::mutex listMx;
 
         bool send (std::string);
         bool saveResponse (std::string);

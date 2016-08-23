@@ -30,7 +30,7 @@ class Controller
         static ComDispatcher dispatcher;
 
         std::string createMessage ();
-        bool cleanResponse (std::string);
+        bool cleanResponse (std::string*);
         bool processResponse (std::string);
         std::string getDesiredData ();
 };

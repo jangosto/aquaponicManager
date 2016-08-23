@@ -40,9 +40,10 @@ std::string Controller::getDesiredData()
         }
     }
     dispatcher.removeMessage (messageId);
-    printf("\n[INFO][Controller::getDesiredData] Response correct: %s", response.c_str());
     
-    cleanResponse(response);
+    cleanResponse(&response);
+
+    printf("\n[INFO][Controller::getDesiredData] Valid response %s", response.c_str());
 
     if (processResponse(response)) {
         result = value;
@@ -89,20 +90,15 @@ std::string Controller::createMessage()
     return message;
 }
 
-bool Controller::cleanResponse(std::string response)
+bool Controller::cleanResponse(std::string* response)
 {
     bool result = false;
-    int responseLength = 0;
 
-    printf("\n[INFO][Controller::cleanResponse] Inicial reponse is: %s", response.c_str());
 
-    responseLength = response.length();
-    response.erase(responseLength - 1, 1);
-    response.erase(0, 2);
+    response->erase(response->length() - 1, 1);
+    response->erase(0, 2);
 
-    printf("\n[INFO][Controller::cleanResponse] Final reponse is: %s", response.c_str());
-
-    if (response.front() != '*' && response.back() != '*') {
+    if (response->front() != '*' && response->back() != '*') {
         result = true;
     }
 
