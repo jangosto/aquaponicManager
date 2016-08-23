@@ -53,7 +53,7 @@ void ComDispatcher::dispatchSendings ()
     while (!stop_sendThread) {
         for (current = conversations.begin(); current != conversations.end(); ++current) {
             if (current->ttl == 0 && (current->response).length() == 0) {
-                printf("\n\n[INFO][ComDispatcher::dispatchSendings] List length: %d\n\n", conversations.size());
+                printf("\n[INFO][ComDispatcher::dispatchSendings] List length: %d", conversations.size());
                 send(current->request);
                 current->ttl = MAX_TTL;
             }
@@ -78,6 +78,7 @@ void ComDispatcher::dispatchReceipts ()
 {
     while (!stop_receiveThread) {
         if (port.read() > 0) {
+            printf("\n[INFO][ComDispatcher::dispatchReceipts] Message Received...");
             saveResponse(port.getDataRX());
         }
     }
@@ -87,10 +88,14 @@ bool ComDispatcher::saveResponse (std::string response)
 {
     std::list<Conversation>::iterator current;
 
+    printf("\n[INFO][ComDispatcher::saveReponse] Looking for corresponding message for: %s", response.c_str());
+
     for (current = conversations.begin(); current != conversations.end(); ++current) {
+        printf("\n[INFO][ComDispatcher::saveReponse] Cheching if it is response for %s request", current->request.c_str());
         if (response.find(current->responseFormat) != std::string::npos) {
             current->manipulate.lock();
             current->response = response;
+            printf("\n[INFO][ComDispatcher::saveReponse] Sending message received signal to requester.");
             (current->signal)->unlock();
             current->manipulate.unlock();
             return true;
@@ -114,6 +119,20 @@ bool ComDispatcher::removeMessage (unsigned int id)
     for (current = conversations.begin(); current != conversations.end(); ++current) {
         if (current->id == id) {
             conversations.erase(current);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool ComDispatcher::removeResponseFromMessage (unsigned int id)
+{
+    std::list<Conversation>::iterator current;
+
+    for (current = conversations.begin(); current != conversations.end(); ++current) {
+        if (current->id == id) {
+            current->response = "";
             return true;
         }
     }

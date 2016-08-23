@@ -29,7 +29,7 @@ int SerialPort::read()
             std::string tempString(reinterpret_cast< char const* >(rx_buffer));
             dataRX.assign(tempString);
             response = rx_length;
-            printf("\n[INFO][SerialPort::read] %i bytes read: %s\n", rx_length, rx_buffer);
+            printf("\n[INFO][SerialPort::read] %i bytes read: %s", rx_length, rx_buffer);
         }
     }
     rxMutex.unlock();
@@ -47,7 +47,7 @@ int SerialPort::send(std::string data)
 
     txMutex.lock();
 
-    fprintf(stdout,"\n[INFO][SerialPort::send] Sending data -%s-...\n",data.c_str());
+    printf("\n[INFO][SerialPort::send] Sending data -%s-...",data.c_str());
 
     p_tx_buffer = &tx_buffer[0];
 
@@ -62,13 +62,13 @@ int SerialPort::send(std::string data)
         numSendedChars = write(uart, &tx_buffer[0], (p_tx_buffer - &tx_buffer[0]));
 
         if (numSendedChars < 0) {
-            printf("\n[ERROR][SerialPort::send] UART TX error\n");
+            printf("\n[ERROR][SerialPort::send] UART TX error");
             response = 0;
         }
     } else {
         printf("\n[ERROR][SerialPort::send] UART TX error because uart is not available\n");
     }
-    printf("\n[INFO][SerialPort::send] Data sended.\n");
+    printf("\n[INFO][SerialPort::send] Data sended.");
 
     txMutex.unlock();
 
@@ -82,7 +82,7 @@ int SerialPort::openUart ()
 
     uart0Handler = open(SERIAL_PATH, O_RDWR | O_NOCTTY | O_NDELAY);
     if (uart0Handler == -1) {
-        printf("\n[ERROR][SerialPort::openUart] Error opening UART path.\n");
+        printf("\n[ERROR][SerialPort::openUart] Error opening UART path.");
         return(-1);
     }
     tcgetattr(uart0Handler, &uartOptions);

@@ -19,15 +19,31 @@ std::string Controller::getDesiredData()
     std::mutex signal;
     std::string response;
     std::string result = "";
+    std::string responseFormat = "";
+    bool validResponse = false;
 
     signal.lock();
     message = createMessage();
-    messageId = dispatcher.sendMessage(message, message, &signal);
-    signal.lock();
+    messageId = dispatcher.sendMessage(message + "*", message, &signal);
 
-    response = dispatcher.getResponse(messageId);
+    while (validResponse != true) {
+        signal.lock();
+
+        printf("\n[INFO][Controller::getDesiredData] Cheking Response...");
+
+        response = dispatcher.getResponse(messageId);
+        if (response[0] == '*' && response[1] == '*' && response.back() == '*' ) {
+            validResponse = true;
+        } else {
+            validResponse = false;
+            dispatcher.removeResponseFromMessage (messageId);
+        }
+    }
     dispatcher.removeMessage (messageId);
-    printf("\n\n[INFO][Controller::getDesiredData] Response taken from controller: %s\n\n", response.c_str());
+    printf("\n[INFO][Controller::getDesiredData] Response correct: %s", response.c_str());
+    
+    cleanResponse(response);
+
     if (processResponse(response)) {
         result = value;
     }
@@ -70,7 +86,27 @@ std::string Controller::createMessage()
          value = "";
     }
 
-    return message + "\r";
+    return message;
+}
+
+bool Controller::cleanResponse(std::string response)
+{
+    bool result = false;
+    int responseLength = 0;
+
+    printf("\n[INFO][Controller::cleanResponse] Inicial reponse is: %s", response.c_str());
+
+    responseLength = response.length();
+    response.erase(responseLength - 1, 1);
+    response.erase(0, 2);
+
+    printf("\n[INFO][Controller::cleanResponse] Final reponse is: %s", response.c_str());
+
+    if (response.front() != '*' && response.back() != '*') {
+        result = true;
+    }
+
+    return result;
 }
 
 bool Controller::processResponse(std::string message)

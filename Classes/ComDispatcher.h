@@ -33,6 +33,7 @@ class ComDispatcher
 
         unsigned int sendMessage (std::string, std::string, std::mutex*);
         bool removeMessage (unsigned int);
+        bool removeResponseFromMessage (unsigned int);
         std::string getResponse (unsigned int);
         bool activate ();
 
