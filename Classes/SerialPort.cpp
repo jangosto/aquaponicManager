@@ -16,6 +16,7 @@ int SerialPort::read()
     if (uart != -1) {
         // Read up to 255 characters from the port if they are there
         unsigned char rx_buffer[256];
+	usleep(30000);
         int rx_length = ::read(uart, (void*)rx_buffer, 255);       //Filestream, buffer to store in, number of bytes to read (max)
         if (rx_length < 0) {
             response = -1;

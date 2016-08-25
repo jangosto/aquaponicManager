@@ -10,7 +10,7 @@
 #include <thread>
 
 #define MAX_TTL 10
-#define TTL_TIME 500000
+#define TTL_TIME 100000
 
 struct Conversation {
     unsigned int id;
