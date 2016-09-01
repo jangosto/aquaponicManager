@@ -19,7 +19,6 @@ struct Conversation {
     std::string request;
     std::string response = "";
     std::string responseFormat;
-//    std::mutex manipulate;
 
     Conversation ();
     Conversation (const Conversation&);
