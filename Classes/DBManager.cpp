@@ -21,84 +21,84 @@ bool DBManager::insertWaterTemperature(std::string address, std::string value, i
 bool DBManager::insertAirTemperature(std::string address, std::string value, int timestamp)
 {
     std::string dataType = "Air Temperature";
-    return insertData(std::string dataType, std::string address, std::string value, int timestamp);
+    return insertData(dataType, address, value, timestamp);
 }
 
 bool DBManager::insertWaterPH(std::string address, std::string value, int timestamp)
 {
     std::string dataType = "Water pH";
-    return insertData(std::string dataType, std::string address, std::string value, int timestamp);
+    return insertData(dataType, address, value, timestamp);
 }
 
 bool DBManager::insertData(std::string dataType, std::string address, std::string value, int timestamp)
 {
     try {
-        StoreQueryResult results = getControllerByAddress(address);
+        mysqlpp::StoreQueryResult results = getControllerByAddress(address);
         int controllerId = results[0]["id"];
 
         results = getDataTypeByName(dataType);
         int dataTypeId = results[0]["id"];
 
         mysqlpp::Connection conn(false);
-        conn.connect(dbName.c_str(), dbHost.c_str(), dbUser.c_str(), dbPass.c_str());
+        conn.connect(databaseName.c_str(), databaseHost.c_str(), databaseUser.c_str(), databasePass.c_str());
 
-        Query query = conn.query();
+        mysqlpp::Query query = conn.query();
         query << "INSERT INTO data" <<
                     "(controller_id, datatype_id, time, value) " <<
                     "VALUES ('" << controllerId << "', '" << dataTypeId << "', " << value.c_str() << ", " << timestamp << ");";
         query.execute();
-    } catch (BadQuery er) {
+    } catch (mysqlpp::BadQuery er) {
         return false;
-    } catch (const BadConversion& er) {
+    } catch (const mysqlpp::BadConversion& er) {
         return false;
-    } catch (const Exception& er) {
+    } catch (const mysqlpp::Exception& er) {
         return false;
     }
 
     return true;
 }
 
-StoreQueryResult DBManager::getControllerByAddress(str::string address)
+mysqlpp::StoreQueryResult DBManager::getControllerByAddress(std::string address)
 {
-    StoreQueryResult results = NULL;
+    mysqlpp::StoreQueryResult results;
     
     try {
         mysqlpp::Connection conn(false);
-        conn.connect(dbName.c_str(), dbHost.c_str(), dbUser.c_str(), dbPass.c_str());
+        conn.connect(databaseName.c_str(), databaseHost.c_str(), databaseUser.c_str(), databasePass.c_str());
 
-        Query query = conn.query();
+        mysqlpp::Query query = conn.query();
         query << "SELECT * FROM controller" <<
                     "WHERE address='" << address.c_str() << "';";
         results = query.store();
-    } catch (BadQuery er) {
-        return NULL;
-    } catch (const BadConversion& er) {
-        return NULL;
-    } catch (const Exception& er) {
-        return NULL;
+    } catch (mysqlpp::BadQuery er) {
+        //return NULL;
+    } catch (const mysqlpp::BadConversion& er) {
+        //return NULL;
+    } catch (const mysqlpp::Exception& er) {
+        //return NULL;
     }
 
     return results;
 }
 
-StoreQueryResult DBManager::getDataTypeByName(std::string dataTypeName)
+mysqlpp::StoreQueryResult DBManager::getDataTypeByName(std::string dataTypeName)
 {
-    StoreQueryResult results = NULL;
+    mysqlpp::StoreQueryResult results;
 
     try {
         mysqlpp::Connection conn(false);
-        conn.connect(dbName.c_str(), dbHost.c_str(), dbUser.c_str(), dbPass.c_str());
+        conn.connect(databaseName.c_str(), databaseHost.c_str(), databaseUser.c_str(), databasePass.c_str());
 
-        Query query = conn.query();
+        mysqlpp::Query query = conn.query();
         query << "SELECT * FROM datatype" <<
                     "WHERE name='" << dataTypeName.c_str() << "';";
         results = query.store();
-    } catch (BadQuery er) {
-        return NULL;
-    } catch (const BadConversion& er) {
-        return NULL;
-    } catch (const Exception& er) {
-        return NULL;
+    } catch (mysqlpp::BadQuery er) {
+        //return NULL;
+    } catch (const mysqlpp::BadConversion& er) {
+        //return NULL;
+    } catch (const mysqlpp::Exception& er) {
+        //return NULL;
     }
 
     return results;

@@ -3,9 +3,9 @@
 
 #include <string>
 
-#include <mysql++.h>
+#include <mysql++/mysql++.h>
 
-Class DBManager
+class DBManager
 {
     public:
         DBManager ();
@@ -22,9 +22,9 @@ Class DBManager
         std::string databaseUser;
         std::string databasePass;
 
-        StoreQueryResult getControllerByAddress(str::string);
-        StoreQueryResult getDataTypeByName(std::string);
+        mysqlpp::StoreQueryResult getControllerByAddress(std::string);
+        mysqlpp::StoreQueryResult getDataTypeByName(std::string);
         bool insertData(std::string, std::string, std::string, int);
-}
+};
 
 #endif
