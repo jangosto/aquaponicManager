@@ -33,19 +33,19 @@ bool DBManager::insertWaterPH(std::string address, std::string value, int timest
 bool DBManager::insertData(std::string dataType, std::string address, std::string value, int timestamp)
 {
     try {
+        std::cout << "\n[INFO][DBManager::insertData]Inserting data in database:";
         mysqlpp::StoreQueryResult results = getControllerByAddress(address);
-        int controllerId = results[0]["id"];
+        int controllerIdInt = results[0]["id"];
+        std::string controllerId = std::to_string(controllerIdInt);
 
         results = getDataTypeByName(dataType);
-        int dataTypeId = results[0]["id"];
+        int dataTypeIdInt = results[0]["id"];
+        std::string dataTypeId = std::to_string(dataTypeIdInt);
 
         mysqlpp::Connection conn(false);
         conn.connect(databaseName.c_str(), databaseHost.c_str(), databaseUser.c_str(), databasePass.c_str());
 
-        mysqlpp::Query query = conn.query();
-        query << "INSERT INTO data" <<
-                    "(controller_id, datatype_id, time, value) " <<
-                    "VALUES ('" << controllerId << "', '" << dataTypeId << "', " << value.c_str() << ", " << timestamp << ");";
+        mysqlpp::Query query = conn.query("INSERT INTO data (controller_id, datatype_id, value, time) VALUES ('" + controllerId + "', '" + dataTypeId + "', " + value + ", " + std::to_string(timestamp) + ");");
         query.execute();
     } catch (mysqlpp::BadQuery er) {
         return false;
@@ -66,9 +66,7 @@ mysqlpp::StoreQueryResult DBManager::getControllerByAddress(std::string address)
         mysqlpp::Connection conn(false);
         conn.connect(databaseName.c_str(), databaseHost.c_str(), databaseUser.c_str(), databasePass.c_str());
 
-        mysqlpp::Query query = conn.query();
-        query << "SELECT * FROM controller" <<
-                    "WHERE address='" << address.c_str() << "';";
+        mysqlpp::Query query = conn.query("SELECT * FROM controller WHERE address='" + address + "';");
         results = query.store();
     } catch (mysqlpp::BadQuery er) {
         //return NULL;
@@ -89,9 +87,7 @@ mysqlpp::StoreQueryResult DBManager::getDataTypeByName(std::string dataTypeName)
         mysqlpp::Connection conn(false);
         conn.connect(databaseName.c_str(), databaseHost.c_str(), databaseUser.c_str(), databasePass.c_str());
 
-        mysqlpp::Query query = conn.query();
-        query << "SELECT * FROM datatype" <<
-                    "WHERE name='" << dataTypeName.c_str() << "';";
+        mysqlpp::Query query = conn.query("SELECT * FROM datatype WHERE name='" + dataTypeName + "';");
         results = query.store();
     } catch (mysqlpp::BadQuery er) {
         //return NULL;

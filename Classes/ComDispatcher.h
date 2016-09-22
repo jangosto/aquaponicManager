@@ -45,7 +45,8 @@ class ComDispatcher
         bool send (std::string);
         bool saveResponse (std::string);
         unsigned int getNewId();
-        Conversation* getMessage (unsigned int);
+        Conversation getMessage (unsigned int);
+        bool messageExists (std::string);
 
         // Threads.
         std::thread* sendThread;

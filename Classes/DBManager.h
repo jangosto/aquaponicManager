@@ -2,6 +2,8 @@
 #define DBMANAGER_H
 
 #include <string>
+#include <iostream>
+#include <unistd.h>
 
 #include <mysql++/mysql++.h>
 

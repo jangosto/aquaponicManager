@@ -35,15 +35,21 @@ bool ComDispatcher::activate ()
 unsigned int ComDispatcher::sendMessage (std::string message, std::string responseFormat, std::mutex* signal)
 {
     Conversation element;
+    unsigned int elementId;
 
-    conversations.push_back(element);
-    conversations.back().ttl = 0;
-    conversations.back().signal = signal;
-    conversations.back().request = message;
-    conversations.back().responseFormat = responseFormat;
-    conversations.back().id = getNewId();
+    if (!messageExists(message)) {
+        listMx.lock();
+        conversations.push_back(element);
+        conversations.back().ttl = 0;
+        conversations.back().signal = signal;
+        conversations.back().request = message;
+        conversations.back().responseFormat = responseFormat;
+        elementId = getNewId();
+        conversations.back().id = elementId;
+        listMx.unlock();
+    }
 
-    return conversations.back().id;
+    return elementId;
 }
 
 void ComDispatcher::dispatchSendings ()
@@ -150,22 +156,22 @@ bool ComDispatcher::removeResponseFromMessage (unsigned int id)
 
 std::string ComDispatcher::getResponse (unsigned int id)
 {
-    Conversation* message;
+    Conversation message;
 
     message = getMessage(id);
 
-    return message->response;
+    return message.response;
 }
 
-Conversation* ComDispatcher::getMessage (unsigned int id)
+Conversation ComDispatcher::getMessage (unsigned int id)
 {
     std::list<Conversation>::iterator current;
-    Conversation* result = NULL;
+    Conversation result;
 
     listMx.lock();
     for (current = conversations.begin(); current != conversations.end(); ++current) {
         if (current->id == id) {
-            result = &(*current);
+            result = *current;
             break;
         }
     }
@@ -188,4 +194,22 @@ void ComDispatcher::expireConversations ()
         listMx.unlock();
         usleep(TTL_TIME);
     }
+}
+
+bool ComDispatcher::messageExists (std::string message)
+{
+    bool exists = false;
+    std::list<Conversation>::iterator current;
+
+    listMx.lock();
+    current = conversations.begin();
+    while (exists != true && current != conversations.end()) {
+        if (current->request == message) {
+            exists = true;
+        }
+        current++;
+    }
+    listMx.unlock();
+ 
+    return exists;
 }
