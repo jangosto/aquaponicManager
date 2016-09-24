@@ -32,6 +32,7 @@ std::string Controller::getDesiredData()
         printf("\n[INFO][Controller::getDesiredData] Cheking Response...");
 
         response = dispatcher.getResponse(messageId);
+        
         if (response[0] == '*' && response[1] == '*' && response.back() == '*' ) {
             validResponse = true;
         } else {
@@ -40,7 +41,7 @@ std::string Controller::getDesiredData()
         }
     }
     dispatcher.removeMessage (messageId);
-    
+
     cleanResponse(&response);
 
     printf("\n[INFO][Controller::getDesiredData] Valid response %s", response.c_str());
@@ -112,7 +113,7 @@ bool Controller::processResponse(std::string message)
     dataArray = Tools::StrTools::split(message, '_');
 
     if (dataArray.size() >= 3) {
-        value = atof(dataArray[2].c_str());
+        value.assign(dataArray[2].c_str());
     }
 
     return true;
