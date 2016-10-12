@@ -28,11 +28,13 @@ class Controller
         std::string address;
         std::string value = "";
         static ComDispatcher dispatcher;
+        std::mutex commandMutex;
+        std::mutex valuePropMutex;
 
         std::string createMessage ();
         bool cleanResponse (std::string*);
         bool processResponse (std::string);
-        std::string getDesiredData ();
+        std::string getDesiredData (std::string);
 };
 
 #endif

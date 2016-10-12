@@ -4,8 +4,13 @@
 #include <string>
 #include <iostream>
 #include <unistd.h>
+#include <vector>
 
 #include <mysql++/mysql++.h>
+
+#define PERIOD_INDEX 0
+#define ADDRESS_INDEX 1
+#define REQUEST_INDEX 2
 
 class DBManager
 {
@@ -16,7 +21,7 @@ class DBManager
         bool insertWaterTemperature(std::string, std::string, int);
         bool insertAirTemperature(std::string, std::string, int);
         bool insertWaterPH(std::string, std::string, int);
-        
+        mysqlpp::StoreQueryResult getMonitoringRequests();
 
     private:
         std::string databaseName;
