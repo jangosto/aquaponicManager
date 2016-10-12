@@ -12,7 +12,7 @@ Controller::Controller(std::string addr)
     dispatcher.activate();
 }
 
-std::string Controller::getDesiredData()
+std::string Controller::getDesiredData(std::string comm)
 {
     unsigned int messageId;
     std::string message;
@@ -22,9 +22,12 @@ std::string Controller::getDesiredData()
     std::string responseFormat = "";
     bool validResponse = false;
 
+    commandMutex.lock();
+    command.assign(comm);
     signal.lock();
     message = createMessage();
     messageId = dispatcher.sendMessage(message + "*", message, &signal);
+    commandMutex.unlock();
 
     while (validResponse != true) {
         signal.lock();
@@ -46,23 +49,24 @@ std::string Controller::getDesiredData()
 
     printf("\n[INFO][Controller::getDesiredData] Valid response %s", response.c_str());
 
+    valuePropMutex.lock();
     if (processResponse(response)) {
         result = value;
+        value = "";
     }
+    valuePropMutex.unlock();
 
     return result;
 }
 
 std::string Controller::getEnvironmentalTemperature()
 {
-    command = "AMBTEMP";
-    return getDesiredData();
+    return getDesiredData("AMBTEMP");
 }
 
 std::string Controller::getWaterTemperature()
 {
-    command = "WATTEMP";
-    return getDesiredData();
+    return getDesiredData("WATTEMP");
 }
 
 std::string Controller::createMessage()
