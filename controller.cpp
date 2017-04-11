@@ -28,6 +28,7 @@ int main (void)
     vector<std::thread*>::iterator current;
     string controllerAddress;
     string controllerRequest;
+    string controllerCommand;
     int period;
     Controller* index;
     function_type threadFunctionAddress;

@@ -108,7 +108,7 @@ mysqlpp::StoreQueryResult DBManager::getMonitoringRequests()
         mysqlpp::Connection conn(false);
         conn.connect(databaseName.c_str(), databaseHost.c_str(), databaseUser.c_str(), databasePass.c_str());
 
-        mysqlpp::Query query = conn.query("SELECT a.period AS period, b.address AS address, c.name AS request FROM monitoring_request AS a INNER JOIN controller AS b ON b.id = a.controller_id INNER JOIN datatype as c ON c.id = a.datatype_id;");
+        mysqlpp::Query query = conn.query("SELECT a.period AS period, b.address AS address, c.name AS request, c.command AS command FROM monitoring_request AS a INNER JOIN controller AS b ON b.id = a.controller_id INNER JOIN datatype as c ON c.id = a.datatype_id;");
         results = query.store();
     } catch (mysqlpp::BadQuery er) {
         //return NULL;
