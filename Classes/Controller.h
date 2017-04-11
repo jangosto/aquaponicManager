@@ -20,8 +20,7 @@ class Controller
         Controller (std::string);
 
         std::string getAddress();
-        std::string getEnvironmentalTemperature ();
-        std::string getWaterTemperature ();
+        std::string useMessage (std::string);
 
     private:
         std::string command;

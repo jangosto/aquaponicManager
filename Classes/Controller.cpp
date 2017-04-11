@@ -59,14 +59,9 @@ std::string Controller::getDesiredData(std::string comm)
     return result;
 }
 
-std::string Controller::getEnvironmentalTemperature()
+std::string Controller::useMessage (std::string command)
 {
-    return getDesiredData("AMBTEMP");
-}
-
-std::string Controller::getWaterTemperature()
-{
-    return getDesiredData("WATTEMP");
+    return getDesiredData(command);
 }
 
 std::string Controller::createMessage()

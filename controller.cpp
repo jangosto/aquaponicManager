@@ -14,10 +14,9 @@
 
 using namespace std;
 
-typedef void (*function_type)(Controller*, int);
+typedef void (*function_type)(Controller*, int, std::string);
 
-void getEnvTemp (Controller* controller, int period);
-void getWaterTemp (Controller* controller, int period);
+void sendMessage (Controller* controller, int period, std::string command);
 Controller* getControllerIndexInVector (vector<Controller*> list, std::string address);
 function_type getFunction(std::string request);
 
@@ -39,6 +38,7 @@ int main (void)
     for (size_t i=0, n=config.num_rows(); i<n; ++i) {
         controllerAddress.assign(config[i]["address"]);
         controllerRequest.assign(config[i]["request"]);
+        controllerCommand.assign(config[i]["command"]);
         period = config[i]["period"];
         index = getControllerIndexInVector(controllers, controllerAddress);
 
@@ -47,9 +47,9 @@ int main (void)
         if (index == false) {
             controllers.push_back(new Controller(controllerAddress));
 
-            threadHandlers.push_back(new std::thread (threadFunctionAddress, controllers.back(), period));
+            threadHandlers.push_back(new std::thread (threadFunctionAddress, controllers.back(), period, controllerCommand));
         } else {
-            threadHandlers.push_back(new std::thread (threadFunctionAddress, index, period));
+            threadHandlers.push_back(new std::thread (threadFunctionAddress, index, period, controllerCommand));
         }
     }
 
@@ -74,37 +74,17 @@ Controller* getControllerIndexInVector (vector<Controller*> list, std::string ad
 
 function_type getFunction(std::string request)
 {
-    if (request == "Water Temperature") {
-        return &getWaterTemp;
-    } else if (request == "Air Temperature") {
-        return &getEnvTemp;
-    } else if (request == "Water pH") {
-        return NULL;
-    } else {
-        return NULL;
-    }
+    return &sendMessage;
 }
 
-void getEnvTemp (Controller* controller, int period)
+void sendMessage (Controller* controller, int period, std::string command)
 {
     string data = "";
     DBManager* database = new DBManager(DATABASE_NAME, DATABASE_HOST, DATABASE_USER, DATABASE_PASS);
 
     while (1) {
-        data.assign(controller->getEnvironmentalTemperature());
+        data.assign(controller->useMessage(command));
         database->insertAirTemperature(controller->getAddress(), data, static_cast<long int>(time(NULL)));
-        sleep(period);
-    }
-}
-
-void getWaterTemp (Controller* controller, int period)
-{
-    string data = "";
-    DBManager* database = new DBManager(DATABASE_NAME, DATABASE_HOST, DATABASE_USER, DATABASE_PASS);
-
-    while (1) {
-        data.assign(controller->getWaterTemperature());
-        database->insertWaterTemperature(controller->getAddress(), data, static_cast<long int>(time(NULL)));
         sleep(period);
     }
 }
